@@ -1,0 +1,20 @@
+[Unit]
+Description=Conduit IoT Platform Server
+After=network.target docker.service
+
+[Service]
+Type=simple
+User=conduit
+WorkingDirectory=/opt/conduit
+ExecStart=/opt/conduit/bin/conduit
+Restart=on-failure
+RestartSec=5s
+
+EnvironmentFile=/opt/conduit/.env
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=conduit-server
+
+[Install]
+WantedBy=multi-user.target

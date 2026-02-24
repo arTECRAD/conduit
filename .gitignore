@@ -1,1 +1,15 @@
 .claude/
+
+# Environment files — contain secrets, never commit
+server/.env
+.env
+
+# TLS certificates — generated locally
+certs/
+
+# Generated secrets — never commit
+server/deploy/mosquitto/passwd
+server/deploy/mosquitto/certs/
+
+# Build output
+server/bin/

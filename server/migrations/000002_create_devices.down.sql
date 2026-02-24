@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS devices CASCADE;
+DROP TYPE IF EXISTS device_status;
