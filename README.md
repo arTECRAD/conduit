@@ -1,10 +1,10 @@
 # Conduit
 
-A consumer-grade indoor air quality monitoring platform built on ESP32-S3 hardware with a Go backend and Next.js web portal.
+Build-your-own IoT monitoring platform built on ESP32-S3 hardware with a Go backend and Next.js web portal.
 
-Monitors temperature, humidity, eCO2, TVOC, PM2.5, and PM10 via CCS811, DHT22, and SDS011 sensors.
+Current demo firmware monitors temperature, humidity, eCO2, TVOC, PM2.5, and PM10 via CCS811, DHT22, and SDS011 sensors.
 
-> **Status:** Active development — Phase 1 (Go backend) complete.
+> **Status:** Active development
 
 ---
 
