@@ -5,6 +5,7 @@
 #include "esp_wifi.h"
 #include "esp_netif.h"
 #include "esp_event.h"
+#include "nvs.h"
 #include "freertos/event_groups.h"
 
 static const char *TAG = "wifi_manager";
@@ -17,6 +18,9 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
                                 int32_t id, void *event_data)
 {
     if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
+        wifi_event_sta_disconnected_t *disc =
+            (wifi_event_sta_disconnected_t *)event_data;
+        ESP_LOGW(TAG, "Disconnected: reason=%d (0x%x)", disc->reason, disc->reason);
         s_connected = false;
         if (s_retry_count < WIFI_MAX_RETRY) {
             esp_wifi_connect();
@@ -42,6 +46,15 @@ esp_err_t wifi_manager_init(void)
     esp_event_loop_create_default();
     esp_netif_create_default_wifi_sta();
 
+    /* Erase the WiFi driver's internal NVS namespace to prevent stale
+     * PMKSA cache from causing auth failures on reboot */
+    nvs_handle_t wifi_nvs;
+    if (nvs_open("nvs.net80211", NVS_READWRITE, &wifi_nvs) == ESP_OK) {
+        nvs_erase_all(wifi_nvs);
+        nvs_commit(wifi_nvs);
+        nvs_close(wifi_nvs);
+    }
+
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     esp_err_t err = esp_wifi_init(&cfg);
     if (err != ESP_OK) return err;
@@ -61,6 +74,8 @@ esp_err_t wifi_manager_connect_station(void)
         ESP_LOGE(TAG, "No WiFi credentials in NVS");
         return ESP_ERR_INVALID_STATE;
     }
+    ESP_LOGI(TAG, "Connecting to SSID: '%s' (len=%d)",
+             cfg.wifi_ssid, (int)strlen(cfg.wifi_ssid));
 
     xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT);
     s_retry_count = 0;
@@ -69,7 +84,7 @@ esp_err_t wifi_manager_connect_station(void)
     wifi_config_t wifi_cfg = {0};
     strlcpy((char *)wifi_cfg.sta.ssid,     cfg.wifi_ssid, sizeof(wifi_cfg.sta.ssid));
     strlcpy((char *)wifi_cfg.sta.password, cfg.wifi_pass, sizeof(wifi_cfg.sta.password));
-    wifi_cfg.sta.threshold.authmode = WIFI_AUTH_WPA_PSK;
+    wifi_cfg.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     wifi_cfg.sta.pmf_cfg.capable  = true;
     wifi_cfg.sta.pmf_cfg.required = false;
 

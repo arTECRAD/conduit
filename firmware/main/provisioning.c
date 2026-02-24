@@ -7,11 +7,83 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "lwip/sockets.h"
 
 static const char *TAG = "provisioning";
 static httpd_handle_t     s_server     = NULL;
 static EventGroupHandle_t s_done_group = NULL;
 #define PROV_DONE_BIT BIT0
+
+/* ── Captive-portal DNS server ──────────────────────────────────────────────
+ * Responds to every DNS A-query with 192.168.4.1 so that iOS/Android
+ * captive-portal detection can reach our HTTP server.
+ * -------------------------------------------------------------------------- */
+static volatile bool s_dns_running = false;
+static TaskHandle_t  s_dns_task    = NULL;
+
+static void dns_server_task(void *pv)
+{
+    uint8_t buf[512];
+
+    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock < 0) {
+        ESP_LOGE(TAG, "DNS socket create failed");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    /* 1-second receive timeout so the loop can notice s_dns_running=false */
+    struct timeval tv = {.tv_sec = 1, .tv_usec = 0};
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+    struct sockaddr_in saddr = {
+        .sin_family      = AF_INET,
+        .sin_port        = htons(53),
+        .sin_addr.s_addr = htonl(INADDR_ANY),
+    };
+    if (bind(sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
+        ESP_LOGE(TAG, "DNS socket bind failed");
+        close(sock);
+        vTaskDelete(NULL);
+        return;
+    }
+    ESP_LOGI(TAG, "DNS captive server running on port 53");
+
+    while (s_dns_running) {
+        struct sockaddr_in src;
+        socklen_t srclen = sizeof(src);
+        int len = recvfrom(sock, buf, sizeof(buf) - 16, 0,
+                           (struct sockaddr *)&src, &srclen);
+        if (len < 12) continue;  /* timeout or runt packet */
+
+        /* Skip QNAME (null-terminated length-prefixed labels) + QTYPE + QCLASS */
+        int pos = 12;
+        while (pos < len && buf[pos] != 0) pos += buf[pos] + 1;
+        pos += 5;  /* null byte + 2-byte QTYPE + 2-byte QCLASS */
+        if (pos > len) continue;
+
+        /* Patch flags and answer count in-place, then append answer RR */
+        buf[2] = 0x81; buf[3] = 0x80;  /* QR=1 response, RA=1 */
+        buf[6] = 0x00; buf[7] = 0x01;  /* 1 answer */
+        buf[8] = 0x00; buf[9] = 0x00;  /* 0 authority */
+        buf[10] = 0x00; buf[11] = 0x00; /* 0 additional */
+
+        buf[pos++] = 0xC0; buf[pos++] = 0x0C; /* name ptr → offset 12 */
+        buf[pos++] = 0x00; buf[pos++] = 0x01; /* type A */
+        buf[pos++] = 0x00; buf[pos++] = 0x01; /* class IN */
+        buf[pos++] = 0x00; buf[pos++] = 0x00;
+        buf[pos++] = 0x00; buf[pos++] = 0x3C; /* TTL 60 s */
+        buf[pos++] = 0x00; buf[pos++] = 0x04; /* rdlength */
+        buf[pos++] = 192;  buf[pos++] = 168;
+        buf[pos++] = 4;    buf[pos++] = 1;    /* 192.168.4.1 */
+
+        sendto(sock, buf, pos, 0, (struct sockaddr *)&src, srclen);
+    }
+
+    close(sock);
+    ESP_LOGI(TAG, "DNS server stopped");
+    vTaskDelete(NULL);
+}
 
 static const char *HTML_FORM =
     "<!DOCTYPE html><html><head><meta charset=utf-8>"
@@ -141,12 +213,19 @@ esp_err_t provisioning_start(void)
     httpd_register_uri_handler(s_server, &cfg_post);
     httpd_register_uri_handler(s_server, &wild);
 
+    /* Start DNS task so iOS/Android captive-portal detection resolves to us */
+    s_dns_running = true;
+    xTaskCreate(dns_server_task, "dns_srv", 3072, NULL, 5, &s_dns_task);
+
     ESP_LOGI(TAG, "Captive portal started");
     return ESP_OK;
 }
 
 esp_err_t provisioning_stop(void)
 {
+    s_dns_running = false;
+    s_dns_task = NULL;  /* task deletes itself after socket close */
+
     if (s_server) {
         httpd_stop(s_server);
         s_server = NULL;
