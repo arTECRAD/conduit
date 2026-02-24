@@ -5,7 +5,7 @@ idf_component_register(
         "wifi_manager.c"
         "provisioning.c"
         "http_client.c"
-        "mqtt_client.c"
+        "conduit_mqtt.c"
         "command_handler.c"
         "sensor_task.c"
         "telemetry.c"
@@ -22,7 +22,7 @@ idf_component_register(
         led_strip
         json
         mbedtls
-        esp_sntp
+        lwip
         app_update
         bootloader_support
         dht22

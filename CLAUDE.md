@@ -211,27 +211,30 @@ server/
 
 ```
 firmware/
-├── CMakeLists.txt
-├── sdkconfig.defaults          # Default ESP-IDF Kconfig settings
-├── partitions.csv              # Partition table (NVS, OTA_0, OTA_1, factory)
-├── main/
-│   ├── CMakeLists.txt
-│   ├── main.c                  # app_main(): init NVS, check provisioning, start tasks
-│   ├── wifi_manager.c/.h       # Station connect + AP mode + captive portal
-│   ├── provisioning.c/.h       # Captive portal HTTP server, NVS credential storage
-│   ├── mqtt_client.c/.h        # MQTT connection, publish, subscribe, reconnect
-│   ├── http_client.c/.h        # HTTPS registration call to server
-│   ├── sensor_task.c/.h        # FreeRTOS task: polls all sensors on interval
-│   ├── command_handler.c/.h    # Parses MQTT commands, applies config, sends ACKs
-│   ├── device_config.c/.h      # NVS read/write for all config (interval, device ID, etc)
-│   ├── led_status.c/.h         # Status LED patterns (booting, AP mode, connected, error)
-│   └── telemetry.c/.h          # Formats sensor data into JSON for MQTT publish
-├── components/
-│   ├── ccs811/                 # CCS811 I2C driver component
-│   ├── dht22/                  # DHT22 driver component
-│   └── sds011/                 # SDS011 UART driver component
-└── certs/
-    └── ca_cert.pem             # Root CA cert for TLS validation (embedded in firmware)
+└── conduit/                    # ESP-IDF project root (created via Espressif IDE)
+    ├── CMakeLists.txt
+    ├── sdkconfig.defaults          # Default ESP-IDF Kconfig settings
+    ├── partitions.csv              # Partition table (NVS, OTA_0, OTA_1, factory)
+    ├── main/
+    │   ├── CMakeLists.txt
+    │   ├── Kconfig.projbuild
+    │   ├── main.c                  # app_main(): init NVS, check provisioning, start tasks
+    │   ├── wifi_manager.c/.h       # Station connect + AP mode + captive portal
+    │   ├── provisioning.c/.h       # Captive portal HTTP server, NVS credential storage
+    │   ├── mqtt_client.c/.h        # MQTT connection, publish, subscribe, reconnect
+    │   ├── http_client.c/.h        # HTTPS registration call to server
+    │   ├── sensor_task.c/.h        # FreeRTOS task: polls all sensors on interval
+    │   ├── command_handler.c/.h    # Parses MQTT commands, applies config, sends ACKs
+    │   ├── device_config.c/.h      # NVS read/write for all config (interval, device ID, etc)
+    │   ├── led_status.c/.h         # Status LED patterns (booting, AP mode, connected, error)
+    │   ├── telemetry.c/.h          # Formats sensor data into JSON for MQTT publish
+    │   └── server_config.h         # Server host, port, provisioning token defines
+    ├── components/
+    │   ├── ccs811/                 # CCS811 I2C driver component
+    │   ├── dht22/                  # DHT22 driver component
+    │   └── sds011/                 # SDS011 UART driver component
+    └── certs/
+        └── ca_cert.pem             # Root CA cert for TLS validation (embedded in firmware)
 ```
 
 ### Coding Conventions (C / ESP-IDF)
@@ -409,7 +412,7 @@ MQTT_PASSWORD=<server-mqtt-password>
 JWT_SECRET=<random-256-bit-key>
 PROVISIONING_TOKEN=<shared-token-for-device-registration>
 SERVER_PORT=8080
-CORS_ORIGIN=https://conduit.colinshirley.com
+CORS_ORIGIN=https://conduit.yourdomain.com
 TLS_CA_CERT_PATH=../certs/ca.pem
 TLS_SERVER_CERT_PATH=../certs/server.pem
 TLS_SERVER_KEY_PATH=../certs/server-key.pem

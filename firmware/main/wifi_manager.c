@@ -69,7 +69,9 @@ esp_err_t wifi_manager_connect_station(void)
     wifi_config_t wifi_cfg = {0};
     strlcpy((char *)wifi_cfg.sta.ssid,     cfg.wifi_ssid, sizeof(wifi_cfg.sta.ssid));
     strlcpy((char *)wifi_cfg.sta.password, cfg.wifi_pass, sizeof(wifi_cfg.sta.password));
-    wifi_cfg.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    wifi_cfg.sta.threshold.authmode = WIFI_AUTH_WPA_PSK;
+    wifi_cfg.sta.pmf_cfg.capable  = true;
+    wifi_cfg.sta.pmf_cfg.required = false;
 
     esp_wifi_set_mode(WIFI_MODE_STA);
     esp_wifi_set_config(WIFI_IF_STA, &wifi_cfg);

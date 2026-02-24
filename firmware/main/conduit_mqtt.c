@@ -1,14 +1,14 @@
-#include "mqtt_client.h"
+/* Include ESP-IDF MQTT header first — no filename conflict since this file
+   is conduit_mqtt.c, not mqtt_client.c */
+#include "mqtt_client.h"   /* ESP-IDF: esp_mqtt_client_handle_t, config, events */
+#include "conduit_mqtt.h"
 #include "server_config.h"
 #include <string.h>
 #include <stdio.h>
 #include "esp_log.h"
-#include "mqtt_client.h"
+#include "esp_event.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
-
-/* Suppress name collision: our module is "mqtt_client.h", esp-idf also has "mqtt_client.h".
-   We include the esp-idf one first via the REQUIRES in CMakeLists. */
 
 static const char *TAG = "conduit_mqtt";
 
@@ -31,7 +31,6 @@ static void mqtt_event_handler(void *arg, esp_event_base_t base,
         ESP_LOGI(TAG, "MQTT connected");
         xEventGroupSetBits(s_evt_group, MQTT_CONNECTED_BIT);
         xEventGroupClearBits(s_evt_group, MQTT_DISCONNECTED_BIT);
-        /* Subscribe to command topic on (re)connect */
         esp_mqtt_client_subscribe(s_client, s_cmd_topic, 1);
         ESP_LOGI(TAG, "Subscribed to %s", s_cmd_topic);
         break;
@@ -65,7 +64,6 @@ esp_err_t mqtt_client_init(const char *username, const char *password, mqtt_cmd_
     s_evt_group = xEventGroupCreate();
     if (!s_evt_group) return ESP_ERR_NO_MEM;
 
-    /* Build topic strings — device segment = MQTT username (matches Mosquitto ACL) */
     snprintf(s_cmd_topic, sizeof(s_cmd_topic), "devices/%s/command",     username);
     snprintf(s_tel_topic, sizeof(s_tel_topic), "devices/%s/telemetry",   username);
     snprintf(s_hlt_topic, sizeof(s_hlt_topic), "devices/%s/health",      username);

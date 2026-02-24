@@ -23,7 +23,7 @@
 #include "wifi_manager.h"
 #include "provisioning.h"
 #include "http_client.h"
-#include "mqtt_client.h"
+#include "conduit_mqtt.h"
 #include "command_handler.h"
 #include "sensor_task.h"
 #include "telemetry.h"

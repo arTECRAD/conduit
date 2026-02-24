@@ -1,7 +1,7 @@
 #include "command_handler.h"
 #include "device_config.h"
 #include "telemetry.h"
-#include "mqtt_client.h"
+#include "conduit_mqtt.h"
 #include "sensor_task.h"
 #include <string.h>
 #include <inttypes.h>
