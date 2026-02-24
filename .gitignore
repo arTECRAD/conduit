@@ -13,3 +13,7 @@ server/deploy/mosquitto/certs/
 
 # Build output
 server/bin/
+
+# ESP-IDF generated config — contains secrets (provisioning token), rebuild from sdkconfig.defaults
+firmware/sdkconfig
+firmware/build/
