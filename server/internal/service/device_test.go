@@ -113,7 +113,7 @@ func (f *fakeDeviceQuerier) DeleteDevice(_ context.Context, arg repository.Delet
 // noopCommander is a CommandPublisher that does nothing.
 type noopCommander struct{}
 
-func (noopCommander) Publish(_ context.Context, _ uuid.UUID, _ model.CommandPayload) error {
+func (noopCommander) Publish(_ context.Context, _ string, _ model.CommandPayload) error {
 	return nil
 }
 

@@ -1,0 +1,33 @@
+idf_component_register(
+    SRCS
+        "main.c"
+        "device_config.c"
+        "wifi_manager.c"
+        "provisioning.c"
+        "http_client.c"
+        "mqtt_client.c"
+        "command_handler.c"
+        "sensor_task.c"
+        "telemetry.c"
+        "led_status.c"
+    INCLUDE_DIRS "."
+    REQUIRES
+        nvs_flash
+        esp_wifi
+        esp_netif
+        esp_http_server
+        esp_http_client
+        mqtt
+        esp_timer
+        led_strip
+        json
+        mbedtls
+        esp_sntp
+        app_update
+        bootloader_support
+        dht22
+        ccs811
+        sds011
+    EMBED_TXTFILES
+        "../certs/ca_cert.pem"
+)

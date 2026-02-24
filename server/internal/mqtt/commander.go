@@ -7,7 +7,6 @@ import (
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/google/uuid"
 
 	"github.com/arTECRAD/conduit/server/internal/model"
 )
@@ -25,8 +24,9 @@ func NewCommander(client paho.Client) *Commander {
 }
 
 // Publish sends a command to the device's command topic.
-func (c *Commander) Publish(ctx context.Context, deviceID uuid.UUID, cmd model.CommandPayload) error {
-	topic := fmt.Sprintf("devices/%s/command", deviceID.String())
+// mqttUsername is the device's MQTT username (e.g. "device_a1b2c3d4"), which matches the Mosquitto ACL.
+func (c *Commander) Publish(ctx context.Context, mqttUsername string, cmd model.CommandPayload) error {
+	topic := fmt.Sprintf("devices/%s/command", mqttUsername)
 
 	payload, err := json.Marshal(cmd)
 	if err != nil {

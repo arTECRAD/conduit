@@ -1,0 +1,54 @@
+menu "Conduit Configuration"
+
+config CONDUIT_PROVISIONING_TOKEN
+    string "Provisioning Token"
+    default "REPLACE_AT_BUILD_TIME"
+    help
+        Pre-shared token for device self-registration with the server.
+        Set via -DCONFIG_CONDUIT_PROVISIONING_TOKEN=... at build time.
+
+config CONDUIT_DEFAULT_POLL_INTERVAL_MS
+    int "Default sensor poll interval (ms)"
+    default 60000
+    range 35000 3600000
+    help
+        Default interval between sensor readings in milliseconds.
+        Minimum 35000ms due to SDS011 fan spin-up time.
+
+config CONDUIT_LED_GPIO
+    int "Status LED GPIO number"
+    default 48
+    help
+        GPIO pin for WS2812 RGB status LED. Default is GPIO48 (on-board LED on DevKitC-1).
+
+config CONDUIT_DHT22_GPIO
+    int "DHT22 sensor GPIO"
+    default 4
+    help
+        GPIO pin connected to DHT22 data line.
+
+config CONDUIT_CCS811_I2C_SDA
+    int "CCS811 I2C SDA GPIO"
+    default 8
+    help
+        I2C SDA GPIO for CCS811 eCO2/TVOC sensor.
+
+config CONDUIT_CCS811_I2C_SCL
+    int "CCS811 I2C SCL GPIO"
+    default 9
+    help
+        I2C SCL GPIO for CCS811 eCO2/TVOC sensor.
+
+config CONDUIT_SDS011_UART_RX
+    int "SDS011 UART RX GPIO"
+    default 12
+    help
+        UART RX GPIO for SDS011 PM2.5/PM10 sensor.
+
+config CONDUIT_SDS011_UART_TX
+    int "SDS011 UART TX GPIO"
+    default 13
+    help
+        UART TX GPIO for SDS011 PM2.5/PM10 sensor.
+
+endmenu

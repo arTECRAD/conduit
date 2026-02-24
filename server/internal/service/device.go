@@ -42,8 +42,9 @@ type DeviceQuerier interface {
 }
 
 // CommandPublisher publishes MQTT commands to devices.
+// mqttUsername is the device's MQTT username (e.g. "device_a1b2c3d4"), matching the Mosquitto ACL.
 type CommandPublisher interface {
-	Publish(ctx context.Context, deviceID uuid.UUID, cmd model.CommandPayload) error
+	Publish(ctx context.Context, mqttUsername string, cmd model.CommandPayload) error
 }
 
 // DeviceService handles device business logic.
@@ -125,7 +126,7 @@ func (s *DeviceService) Claim(ctx context.Context, userID uuid.UUID, req model.C
 		CommandID: uuid.New(),
 		Type:      model.CommandActivate,
 	}
-	if pubErr := s.commander.Publish(ctx, claimed.ID, cmd); pubErr != nil {
+	if pubErr := s.commander.Publish(ctx, claimed.MqttUsername, cmd); pubErr != nil {
 		// Log but don't fail the claim — device will re-poll or reconnect
 		fmt.Printf("warn: publish activate command for device %s: %v\n", claimed.ID, pubErr)
 	}
