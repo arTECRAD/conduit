@@ -20,8 +20,8 @@ func NewClient(brokerURL, username, password, caCertPath string) (paho.Client, e
 	opts.SetUsername(username)
 	opts.SetPassword(password)
 	opts.SetAutoReconnect(true)
-	opts.SetConnectRetry(true)
-	opts.SetConnectRetryInterval(5 * time.Second)
+	opts.SetConnectRetry(false)
+	opts.SetConnectTimeout(10 * time.Second)
 	opts.SetKeepAlive(30 * time.Second)
 	opts.SetCleanSession(true)
 

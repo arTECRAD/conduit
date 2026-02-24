@@ -47,16 +47,22 @@ type CommandPublisher interface {
 	Publish(ctx context.Context, mqttUsername string, cmd model.CommandPayload) error
 }
 
+// MQTTProvisioner manages MQTT user credentials in the broker.
+type MQTTProvisioner interface {
+	AddUser(username, password string) error
+}
+
 // DeviceService handles device business logic.
 type DeviceService struct {
-	q          DeviceQuerier
-	commander  CommandPublisher
-	bcryptCost int
+	q           DeviceQuerier
+	commander   CommandPublisher
+	provisioner MQTTProvisioner
+	bcryptCost  int
 }
 
 // NewDeviceService creates a new DeviceService.
-func NewDeviceService(q DeviceQuerier, commander CommandPublisher, bcryptCost int) *DeviceService {
-	return &DeviceService{q: q, commander: commander, bcryptCost: bcryptCost}
+func NewDeviceService(q DeviceQuerier, commander CommandPublisher, provisioner MQTTProvisioner, bcryptCost int) *DeviceService {
+	return &DeviceService{q: q, commander: commander, provisioner: provisioner, bcryptCost: bcryptCost}
 }
 
 // Register handles ESP32 device self-registration on first boot.
@@ -92,6 +98,13 @@ func (s *DeviceService) Register(ctx context.Context, req model.RegisterDeviceRe
 			return nil, ErrDeviceAlreadyRegistered
 		}
 		return nil, fmt.Errorf("create device: %w", err)
+	}
+
+	// Provision MQTT credentials in the broker
+	if s.provisioner != nil {
+		if err := s.provisioner.AddUser(mqttUsername, mqttPassword); err != nil {
+			return nil, fmt.Errorf("provision MQTT user: %w", err)
+		}
 	}
 
 	return &model.RegisterDeviceResponse{

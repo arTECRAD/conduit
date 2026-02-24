@@ -24,7 +24,9 @@ type Config struct {
 	Env               string        `envconfig:"ENV" default:"development"`
 	AccessTokenTTL    time.Duration `envconfig:"ACCESS_TOKEN_TTL" default:"15m"`
 	RefreshTokenTTL   time.Duration `envconfig:"REFRESH_TOKEN_TTL" default:"720h"`
-	BcryptCost        int           `envconfig:"BCRYPT_COST" default:"12"`
+	BcryptCost             int           `envconfig:"BCRYPT_COST" default:"12"`
+	MosquittoContainer     string        `envconfig:"MOSQUITTO_CONTAINER" default:"conduit-mosquitto"`
+	MosquittoPasswdPath    string        `envconfig:"MOSQUITTO_PASSWD_PATH" default:"/mosquitto/config/passwd"`
 }
 
 // Load reads configuration from environment variables.

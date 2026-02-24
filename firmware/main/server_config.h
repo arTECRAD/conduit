@@ -9,6 +9,6 @@
 #define PROVISIONING_TOKEN      CONFIG_CONDUIT_PROVISIONING_TOKEN
 #define CONDUIT_FW_VERSION      "1.0.0"
 
-/* Embedded TLS certificate (ISRG Root X1) — see main/CMakeLists.txt EMBED_TXTFILES */
-extern const uint8_t ca_cert_pem_start[] asm("_binary_ca_cert_pem_start");
-extern const uint8_t ca_cert_pem_end[]   asm("_binary_ca_cert_pem_end");
+/* TLS verification uses the built-in mbedTLS certificate bundle
+ * (CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL=y in sdkconfig.defaults)
+ * via esp_crt_bundle_attach — no manually embedded cert needed. */

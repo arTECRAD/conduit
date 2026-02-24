@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "esp_log.h"
 #include "esp_http_client.h"
+#include "esp_crt_bundle.h"
 #include "cJSON.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -46,7 +47,7 @@ static esp_err_t do_register(const char *identifier, const char *setup_code,
     esp_http_client_config_t config = {
         .url           = url,
         .method        = HTTP_METHOD_POST,
-        .cert_pem      = (const char *)ca_cert_pem_start,
+        .crt_bundle_attach = esp_crt_bundle_attach,
         .event_handler = http_event_handler,
         .user_data     = &ctx,
         .timeout_ms    = 10000,
@@ -61,6 +62,9 @@ static esp_err_t do_register(const char *identifier, const char *setup_code,
         "{\"device_identifier\":\"%s\",\"setup_code\":\"%s\",\"provisioning_token\":\"%s\"}",
         identifier, setup_code, PROVISIONING_TOKEN);
 
+    char auth_hdr[128];
+    snprintf(auth_hdr, sizeof(auth_hdr), "Bearer %s", PROVISIONING_TOKEN);
+    esp_http_client_set_header(client, "Authorization", auth_hdr);
     esp_http_client_set_header(client, "Content-Type", "application/json");
     esp_http_client_set_post_field(client, body, blen);
 

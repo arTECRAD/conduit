@@ -18,6 +18,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "freertos/semphr.h"
 
 #include "device_config.h"
 #include "wifi_manager.h"
@@ -40,24 +41,32 @@ static void on_mqtt_command(const char *payload, size_t len)
 }
 
 /* Best-effort SNTP sync; non-fatal if it times out */
+static SemaphoreHandle_t s_sntp_sem = NULL;
+
+static void sntp_sync_cb(struct timeval *tv)
+{
+    (void)tv;
+    if (s_sntp_sem) xSemaphoreGive(s_sntp_sem);
+}
+
 static void sntp_sync_wait(uint32_t timeout_ms)
 {
+    s_sntp_sem = xSemaphoreCreateBinary();
+
     esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
     esp_sntp_setservername(0, "pool.ntp.org");
     esp_sntp_setservername(1, "time.google.com");
+    esp_sntp_set_time_sync_notification_cb(sntp_sync_cb);
     esp_sntp_init();
 
-    uint32_t waited = 0;
-    while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED && waited < timeout_ms) {
-        vTaskDelay(pdMS_TO_TICKS(500));
-        waited += 500;
-    }
-    if (sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED) {
+    if (xSemaphoreTake(s_sntp_sem, pdMS_TO_TICKS(timeout_ms)) == pdTRUE) {
         time_t now = time(NULL);
         ESP_LOGI(TAG, "SNTP synced: epoch=%lld", (long long)now);
     } else {
         ESP_LOGW(TAG, "SNTP sync timeout — timestamps will be omitted from telemetry");
     }
+    vSemaphoreDelete(s_sntp_sem);
+    s_sntp_sem = NULL;
 }
 
 void app_main(void)
@@ -111,7 +120,7 @@ void app_main(void)
     ESP_LOGI(TAG, "WiFi connected");
 
     /* ── 6. SNTP (best-effort, 10s) ─────────────────────────────────── */
-    sntp_sync_wait(10000);
+    sntp_sync_wait(30000);
 
     /* ── 7. Device registration (if not already done) ───────────────── */
     if (!cfg.registered) {

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "esp_log.h"
 #include "esp_event.h"
+#include "esp_crt_bundle.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 
@@ -76,7 +77,7 @@ esp_err_t mqtt_client_init(const char *username, const char *password, mqtt_cmd_
     esp_mqtt_client_config_t config = {
         .broker = {
             .address.uri = broker_uri,
-            .verification.certificate = (const char *)ca_cert_pem_start,
+            .verification.crt_bundle_attach = esp_crt_bundle_attach,
         },
         .credentials = {
             .username = username,

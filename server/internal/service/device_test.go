@@ -118,7 +118,7 @@ func (noopCommander) Publish(_ context.Context, _ string, _ model.CommandPayload
 }
 
 func newTestDeviceService(q service.DeviceQuerier) *service.DeviceService {
-	return service.NewDeviceService(q, noopCommander{}, 4)
+	return service.NewDeviceService(q, noopCommander{}, nil, 4)
 }
 
 func TestDeviceService_Register(t *testing.T) {

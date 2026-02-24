@@ -28,6 +28,4 @@ idf_component_register(
         dht22
         ccs811
         sds011
-    EMBED_TXTFILES
-        "../certs/ca_cert.pem"
 )

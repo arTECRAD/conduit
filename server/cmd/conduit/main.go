@@ -82,10 +82,11 @@ func run() error {
 	q := repository.New(pool)
 	telemetryRepo := repository.NewSensorReadingsCustom(pool)
 	commander := mqttpkg.NewCommander(mqttClient)
+	provisioner := mqttpkg.NewProvisioner(cfg.MosquittoContainer, cfg.MosquittoPasswdPath)
 
 	// Services
 	authSvc := service.NewAuthService(q, cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL, cfg.BcryptCost)
-	deviceSvc := service.NewDeviceService(q, commander, cfg.BcryptCost)
+	deviceSvc := service.NewDeviceService(q, commander, provisioner, cfg.BcryptCost)
 	telemetrySvc := service.NewTelemetryService(telemetryRepo, q)
 
 	// MQTT Ingester (optional)
